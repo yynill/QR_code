@@ -22,18 +22,41 @@ ENCODING_MODES = {
     'ECI': 0b0111
 }
 
-# Length bits lookup table
-LENGTH_BITS = [
-    [10, 12, 14],
-    [9, 11, 13],
-    [8, 16, 16],
-    [8, 10, 12]
-]
+# Lookup table for QR code format based on the length of the encoded data
+QR_CODE_FORMAT = {
+    (1, 17): "Version 1 (21x21 modules)",
+    (18, 32): "Version 2 (25x25 modules)",
+    (33, 53): "Version 3 (29x29 modules)",
+    (54, 78): "Version 4 (33x33 modules)",
+    (79, 106): "Version 5 (37x37 modules)",
+    (107, 134): "Version 6 (41x41 modules)",
+    (135, 154): "Version 7 (45x45 modules)",
+    (155, 192): "Version 8 (49x49 modules)",
+    (193, 230): "Version 9 (53x53 modules)",
+    (231, 271): "Version 10 (57x57 modules)",
+    (272, 312): "Version 11 (61x61 modules)",
+    (313, 353): "Version 12 (65x65 modules)",
+    (354, 394): "Version 13 (69x69 modules)",
+    (395, 437): "Version 14 (73x73 modules)",
+    (438, 480): "Version 15 (77x77 modules)",
+}
+
+
+def get_encoded_data_length(encoded_data):
+    return len(encoded_data)
+
+
+def get_qr_code_format(encoded_data):
+    encoded_data_length = get_encoded_data_length(encoded_data)
+    for (start, end), format_name in QR_CODE_FORMAT.items():
+        if start <= encoded_data_length <= end:
+            return format_name
+    return "Unknown QR Code Format"
+
 
 # Function to determine encoding mode based on input string
-
-
 def get_encoding_mode(string):
+
     if NUMERIC_RE.match(string):
         return ENCODING_MODES['Numeric']
     if ALPHANUMERIC_RE.match(string):
@@ -44,10 +67,8 @@ def get_encoding_mode(string):
         return ENCODING_MODES['Byte']
     return ENCODING_MODES['ECI']
 
-# Function to encode data
 
-
-def encode_data(encoding_mode, data_to_encode, eci_designator=None):
+def encode_data(encoding_mode, data_to_encode, eci_designator=3):  # Function to encode data
     encoded_data = []
 
     # Add mode indicator
@@ -100,36 +121,47 @@ def encode_data(encoding_mode, data_to_encode, eci_designator=None):
     return encoded_data
 
 
+def encode_data_to_binary(encoded_data):
+    binary_data = ""
+    for item in encoded_data:
+        # Convert item to binary, and remove '0b' prefix
+        binary_item = bin(item)[2:]
+        # Pad the binary item with leading zeros to ensure each binary representation is 8 bits long
+        binary_item = binary_item.zfill(8)
+        binary_data += binary_item
+    return binary_data
+
+
 # Example data to encode
 
-# Numeric Mode Example
-data_numeric = "123456"  # Numeric Mode
-encoded_numeric = encode_data(ENCODING_MODES['Numeric'], data_numeric)
-print("Encoded Numeric Data:", encoded_numeric)
+# # Numeric Mode Example
+# data_numeric = "123456"  # Numeric Mode
+# encoded_numeric = encode_data(ENCODING_MODES['Numeric'], data_numeric)
+# print("Encoded Numeric Data:", encoded_numeric)
 
-# Alphanumeric Mode Example
-data_alphanumeric = "HELLO123"  # Alphanumeric Mode
-encoded_alphanumeric = encode_data(
-    ENCODING_MODES['Alphanumeric'], data_alphanumeric)
-print("Encoded Alphanumeric Data:", encoded_alphanumeric)
+# # Alphanumeric Mode Example
+# data_alphanumeric = "HELLO123"  # Alphanumeric Mode
+# encoded_alphanumeric = encode_data(
+#     ENCODING_MODES['Alphanumeric'], data_alphanumeric)
+# print("Encoded Alphanumeric Data:", encoded_alphanumeric)
 
-# Byte Mode Example (Text Data)
-data_byte_text = "Hello, World!"  # Byte Mode (Text Data)
-encoded_byte_text = encode_data(ENCODING_MODES['Byte'], data_byte_text)
-print("Encoded Byte Mode (Text) Data:", encoded_byte_text)
+# # Byte Mode Example (Text Data)
+# data_byte_text = "Hello, World!"  # Byte Mode (Text Data)
+# encoded_byte_text = encode_data(ENCODING_MODES['Byte'], data_byte_text)
+# print("Encoded Byte Mode (Text) Data:", encoded_byte_text)
 
-# Byte Mode Example (Binary Data)
-data_byte_binary = '01'  # Byte Mode (Binary Data)
-encoded_byte_binary = encode_data(ENCODING_MODES['Byte'], data_byte_binary)
-print("Encoded Byte Mode (Binary) Data:", encoded_byte_binary)
+# # Byte Mode Example (Binary Data)
+# data_byte_binary = '01'  # Byte Mode (Binary Data)
+# encoded_byte_binary = encode_data(ENCODING_MODES['Byte'], data_byte_binary)
+# print("Encoded Byte Mode (Binary) Data:", encoded_byte_binary)
 
-# Kanji Mode Example
-data_kanji = "漢字"  # Kanji Mode
-encoded_kanji = encode_data(ENCODING_MODES['Kanji'], data_kanji)
-print("Encoded Kanji Data:", encoded_kanji)
+# # Kanji Mode Example
+# data_kanji = "漢字"  # Kanji Mode
+# encoded_kanji = encode_data(ENCODING_MODES['Kanji'], data_kanji)
+# print("Encoded Kanji Data:", encoded_kanji)
 
-# ECI Mode Example
-eci_designator = 3  # Example ECI Designator Value
-data_eci = "Some Text"  # ECI Mode
-encoded_eci = encode_data(ENCODING_MODES['ECI'], data_eci, eci_designator)
-print("Encoded ECI Data with Designator:", encoded_eci)
+# # ECI Mode Example
+# eci_designator = 3  # Example ECI Designator Value
+# data_eci = "Some Text"  # ECI Mode
+# encoded_eci = encode_data(ENCODING_MODES['ECI'], data_eci, eci_designator)
+# print("Encoded ECI Data with Designator:", encoded_eci)
